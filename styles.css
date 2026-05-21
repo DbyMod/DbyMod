@@ -1090,7 +1090,7 @@ p {
   border: 1px solid var(--line-strong);
   border-radius: 8px;
   background: #000;
-  pointer-events: none;
+  cursor: pointer;
   touch-action: pan-y;
 }
 
@@ -1121,6 +1121,63 @@ p {
   height: 100%;
   object-fit: contain;
   pointer-events: none;
+}
+
+.video-hit {
+  position: absolute;
+  z-index: 4;
+  right: 1rem;
+  bottom: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.65rem;
+  padding: 0.62rem 0.85rem;
+  border: 1px solid rgba(167, 255, 0, 0.42);
+  border-radius: 7px;
+  background:
+    linear-gradient(135deg, rgba(167, 255, 0, 0.28), rgba(36, 216, 255, 0.14)),
+    rgba(0, 0, 0, 0.72);
+  box-shadow: 0 0 28px rgba(167, 255, 0, 0.24);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 180ms ease, transform 180ms ease, border-color 180ms ease;
+  backdrop-filter: blur(12px);
+  touch-action: manipulation;
+}
+
+.video-frame.is-playing .video-hit {
+  opacity: 0;
+  transform: translate3d(0, 8px, 0);
+  pointer-events: none;
+}
+
+.video-frame:hover .video-hit,
+.video-frame:focus-within .video-hit,
+.video-frame.is-paused .video-hit,
+.video-frame.has-video-error .video-hit {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  pointer-events: auto;
+}
+
+.video-hit:hover,
+.video-hit:focus-visible {
+  border-color: var(--lime);
+}
+
+.video-hit-icon {
+  width: 0;
+  height: 0;
+  border-top: 0.42rem solid transparent;
+  border-bottom: 0.42rem solid transparent;
+  border-left: 0.68rem solid var(--lime);
+  filter: drop-shadow(0 0 10px rgba(167, 255, 0, 0.8));
 }
 
 .video-actions {
@@ -2064,6 +2121,15 @@ p {
   .button,
   .video-action {
     width: 100%;
+  }
+
+  .video-hit {
+    right: 0.65rem;
+    bottom: 0.65rem;
+    max-width: calc(100% - 1.3rem);
+    min-height: 2.35rem;
+    padding: 0.5rem 0.68rem;
+    font-size: 0.72rem;
   }
 
   .isekai-opening {

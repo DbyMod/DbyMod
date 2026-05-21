@@ -27,9 +27,12 @@ const isekaiProgress = document.querySelector("[data-isekai-progress]");
 const summonTrigger = document.querySelector("[data-summon-trigger]");
 const summonStage = document.querySelector("[data-summon]");
 const summonCloseButtons = document.querySelectorAll("[data-summon-close]");
+const videoFrame = document.querySelector(".video-frame");
 const featuredVideo = document.querySelector(".video-frame video");
 const videoToggle = document.querySelector("[data-video-toggle]");
 const videoMute = document.querySelector("[data-video-mute]");
+const videoHit = document.querySelector("[data-video-hit]");
+const videoStatus = document.querySelector("[data-video-status]");
 const navLinks = document.querySelectorAll(".site-header nav a[href^='#']");
 const scrollPrev = document.querySelector("[data-scroll-prev]");
 const scrollNext = document.querySelector("[data-scroll-next]");
@@ -523,21 +526,78 @@ window.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && summonStage?.classList.contains("is-open")) closeSummon();
 });
 
+let videoAutoplayAttempted = false;
+
 const syncVideoButtons = () => {
   if (!featuredVideo) return;
+
+  const hasError = Boolean(featuredVideo.error);
+  const isPlaying = !featuredVideo.paused && !hasError;
+
+  videoFrame?.classList.toggle("is-playing", isPlaying);
+  videoFrame?.classList.toggle("is-paused", !isPlaying);
+  videoFrame?.classList.toggle("has-video-error", hasError);
+
   if (videoToggle) videoToggle.textContent = featuredVideo.paused ? "Play" : "Pause";
   if (videoMute) videoMute.textContent = featuredVideo.muted ? "Unmute" : "Mute";
+  if (videoStatus) {
+    if (hasError) {
+      videoStatus.textContent = "Reload video";
+    } else if (featuredVideo.paused) {
+      videoStatus.textContent = "Play reel";
+    } else {
+      videoStatus.textContent = "Playing";
+    }
+  }
 };
 
-videoToggle?.addEventListener("click", async () => {
+const playFeaturedVideo = async ({ forceMuted = false } = {}) => {
   if (!featuredVideo) return;
+
+  if (forceMuted) featuredVideo.muted = true;
+  featuredVideo.playsInline = true;
+
+  if (featuredVideo.error || featuredVideo.networkState === HTMLMediaElement.NETWORK_EMPTY) {
+    featuredVideo.load();
+  }
+
+  try {
+    await featuredVideo.play();
+  } catch {
+    if (!featuredVideo.muted) {
+      featuredVideo.muted = true;
+      await featuredVideo.play().catch(() => {});
+    }
+  }
+
+  syncVideoButtons();
+};
+
+const toggleFeaturedVideo = async () => {
+  if (!featuredVideo) return;
+
   if (featuredVideo.paused) {
-    await featuredVideo.play().catch(() => {});
+    await playFeaturedVideo();
   } else {
     featuredVideo.pause();
+    syncVideoButtons();
   }
-  syncVideoButtons();
+};
+
+const attemptFeaturedAutoplay = () => {
+  if (!featuredVideo || videoAutoplayAttempted) return;
+  videoAutoplayAttempted = true;
+  playFeaturedVideo({ forceMuted: true });
+};
+
+videoToggle?.addEventListener("click", toggleFeaturedVideo);
+
+videoHit?.addEventListener("click", (event) => {
+  event.stopPropagation();
+  toggleFeaturedVideo();
 });
+
+videoFrame?.addEventListener("click", toggleFeaturedVideo);
 
 videoMute?.addEventListener("click", () => {
   if (!featuredVideo) return;
@@ -546,9 +606,21 @@ videoMute?.addEventListener("click", () => {
 });
 
 featuredVideo?.addEventListener("play", syncVideoButtons);
+featuredVideo?.addEventListener("playing", syncVideoButtons);
 featuredVideo?.addEventListener("pause", syncVideoButtons);
+featuredVideo?.addEventListener("canplay", attemptFeaturedAutoplay);
 featuredVideo?.addEventListener("loadeddata", syncVideoButtons);
 featuredVideo?.addEventListener("volumechange", syncVideoButtons);
+featuredVideo?.addEventListener("error", syncVideoButtons);
+
+if (featuredVideo) {
+  window.addEventListener("load", () => window.setTimeout(attemptFeaturedAutoplay, 450), { once: true });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && featuredVideo.paused && featuredVideo.autoplay) {
+      playFeaturedVideo({ forceMuted: true });
+    }
+  });
+}
 
 document.querySelectorAll('a[href^="#"]').forEach((link) => {
   link.addEventListener("click", (event) => {
