@@ -662,6 +662,7 @@ window.addEventListener("keydown", (event) => {
 });
 
 let videoAutoplayTimer = null;
+let videoAudioUnlockBound = false;
 
 const syncVideoButtons = () => {
   if (!featuredVideo) return;
@@ -676,23 +677,43 @@ const syncVideoButtons = () => {
 
 const prepareFeaturedVideo = () => {
   if (!featuredVideo) return;
-  featuredVideo.defaultMuted = true;
-  featuredVideo.muted = true;
+  featuredVideo.defaultMuted = false;
+  featuredVideo.muted = false;
   featuredVideo.loop = true;
   featuredVideo.autoplay = true;
   featuredVideo.playsInline = true;
-  featuredVideo.setAttribute("muted", "");
+  featuredVideo.volume = 1;
+  featuredVideo.removeAttribute("muted");
   featuredVideo.setAttribute("autoplay", "");
   featuredVideo.setAttribute("loop", "");
   featuredVideo.setAttribute("playsinline", "");
   featuredVideo.setAttribute("webkit-playsinline", "");
 };
 
-const playFeaturedVideo = async ({ forceMuted = false } = {}) => {
+const bindVideoAudioUnlock = () => {
+  if (!featuredVideo || videoAudioUnlockBound) return;
+  videoAudioUnlockBound = true;
+
+  const unlock = () => {
+    featuredVideo.defaultMuted = false;
+    featuredVideo.muted = false;
+    featuredVideo.volume = 1;
+    featuredVideo.play().catch(() => {});
+    window.removeEventListener("pointerdown", unlock);
+    window.removeEventListener("keydown", unlock);
+    window.removeEventListener("touchstart", unlock);
+    videoAudioUnlockBound = false;
+  };
+
+  window.addEventListener("pointerdown", unlock, { passive: true });
+  window.addEventListener("keydown", unlock);
+  window.addEventListener("touchstart", unlock, { passive: true });
+};
+
+const playFeaturedVideo = async ({ allowMutedFallback = true } = {}) => {
   if (!featuredVideo) return;
 
   prepareFeaturedVideo();
-  if (forceMuted) featuredVideo.muted = true;
 
   if (featuredVideo.error || featuredVideo.networkState === HTMLMediaElement.NETWORK_EMPTY) {
     featuredVideo.load();
@@ -701,9 +722,11 @@ const playFeaturedVideo = async ({ forceMuted = false } = {}) => {
   try {
     await featuredVideo.play();
   } catch {
-    if (!featuredVideo.muted) {
+    if (allowMutedFallback) {
       featuredVideo.muted = true;
+      featuredVideo.defaultMuted = true;
       await featuredVideo.play().catch(() => {});
+      bindVideoAudioUnlock();
     }
   }
 
@@ -716,12 +739,15 @@ const attemptFeaturedAutoplay = (delay = 0) => {
   prepareFeaturedVideo();
   videoAutoplayTimer = window.setTimeout(() => {
     if (document.hidden || document.visibilityState === "hidden") return;
-    playFeaturedVideo({ forceMuted: true });
+    playFeaturedVideo({ allowMutedFallback: true });
   }, delay);
 };
 
 videoFrame?.addEventListener("click", () => {
-  if (featuredVideo?.paused) playFeaturedVideo({ forceMuted: true });
+  if (!featuredVideo) return;
+  featuredVideo.muted = false;
+  featuredVideo.defaultMuted = false;
+  playFeaturedVideo({ allowMutedFallback: false });
 });
 
 featuredVideo?.addEventListener("play", syncVideoButtons);
