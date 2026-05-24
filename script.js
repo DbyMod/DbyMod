@@ -1,8 +1,11 @@
 const root = document.documentElement;
 const meter = document.querySelector("[data-scroll-meter]");
 const header = document.querySelector(".site-header");
+const hyperspeedCanvas = document.querySelector("[data-hyperspeed]");
 const revealItems = document.querySelectorAll(".reveal");
 const tiltCards = document.querySelectorAll("[data-tilt-card]");
+const lanyardCards = document.querySelectorAll("[data-lanyard-card]");
+const evilEyes = document.querySelectorAll("[data-evil-eye]");
 const depthCards = document.querySelectorAll("[data-scroll-depth]");
 const imageCards = document.querySelectorAll("[data-3d-image]");
 const showcaseOptions = document.querySelectorAll("[data-showcase-option]");
@@ -29,10 +32,6 @@ const summonStage = document.querySelector("[data-summon]");
 const summonCloseButtons = document.querySelectorAll("[data-summon-close]");
 const videoFrame = document.querySelector(".video-frame");
 const featuredVideo = document.querySelector(".video-frame video");
-const videoToggle = document.querySelector("[data-video-toggle]");
-const videoMute = document.querySelector("[data-video-mute]");
-const videoHit = document.querySelector("[data-video-hit]");
-const videoStatus = document.querySelector("[data-video-status]");
 const navLinks = document.querySelectorAll(".site-header nav a[href^='#']");
 const scrollPrev = document.querySelector("[data-scroll-prev]");
 const scrollNext = document.querySelector("[data-scroll-next]");
@@ -47,11 +46,10 @@ let scrollTicking = false;
 let lastPointerEvent = null;
 let isekaiIndex = 0;
 let isekaiTransitioning = false;
-let initialHashCorrectionActive = Boolean(window.location.hash);
 let initialHashCorrectionExpired = false;
 let userScrollIntentDetected = false;
 let initialHashTimers = [];
-let lastTouchY = null;
+let lastNavUpdate = 0;
 
 const getSessionFlag = (key) => {
   try {
@@ -94,64 +92,166 @@ const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
 const scrollingElement = () => document.scrollingElement || document.documentElement;
 
-const scrollByFallback = (deltaY) => {
-  if (!deltaY) return;
-  const before = window.scrollY;
-  window.scrollBy({ top: deltaY, behavior: "auto" });
-  if (window.scrollY === before) {
-    const scroller = scrollingElement();
-    scroller.scrollTop = clamp(scroller.scrollTop + deltaY, 0, scroller.scrollHeight - window.innerHeight);
-  }
-  requestScrollUpdate();
-};
+const initHyperspeed = () => {
+  if (!hyperspeedCanvas || reduceMotion.matches) return;
 
-const ensureWheelScroll = (event) => {
-  if (event.ctrlKey || event.metaKey || Math.abs(event.deltaY) < 1) return;
-  cancelInitialHashCorrection();
-  const before = window.scrollY;
-  const delta = event.deltaMode === 1 ? event.deltaY * 40 : event.deltaY;
-  window.requestAnimationFrame(() => {
-    if (Math.abs(window.scrollY - before) < 1) scrollByFallback(delta);
-  });
-};
+  const context = hyperspeedCanvas.getContext("2d", { alpha: true });
+  if (!context) return;
 
-const ensureTouchScroll = (event) => {
-  if (event.touches.length !== 1) return;
-  const currentY = event.touches[0].clientY;
-  if (lastTouchY == null) {
-    lastTouchY = currentY;
-    return;
-  }
-  const delta = lastTouchY - currentY;
-  lastTouchY = currentY;
-  if (Math.abs(delta) < 2) return;
-  cancelInitialHashCorrection();
-  const before = window.scrollY;
-  window.requestAnimationFrame(() => {
-    if (Math.abs(window.scrollY - before) < 1) scrollByFallback(delta);
-  });
-};
-
-const ensureKeyboardScroll = (event) => {
-  const tagName = document.activeElement?.tagName;
-  if (["INPUT", "TEXTAREA", "SELECT"].includes(tagName)) return;
-
-  const keyDeltas = {
-    ArrowDown: 90,
-    ArrowUp: -90,
-    PageDown: Math.round(window.innerHeight * 0.82),
-    PageUp: -Math.round(window.innerHeight * 0.82),
-    Home: -window.scrollY,
-    End: scrollingElement().scrollHeight,
-    " ": event.shiftKey ? -Math.round(window.innerHeight * 0.82) : Math.round(window.innerHeight * 0.82),
+  const preset = {
+    density: 96,
+    speed: 0.00034,
+    horizon: 0.44,
+    vanishingSpread: 0.04,
+    roadSpread: 0.58,
+    colors: ["#92ff00", "#ffffff", "#c8ff72"],
   };
-  const delta = keyDeltas[event.key];
-  if (delta == null) return;
 
-  const before = window.scrollY;
-  window.setTimeout(() => {
-    if (Math.abs(window.scrollY - before) < 1) scrollByFallback(delta);
-  }, 24);
+  let width = 0;
+  let height = 0;
+  let dpr = 1;
+  let animationFrame = null;
+  let lastTime = 0;
+  let isVisible = true;
+  const streaks = [];
+
+  const resetStreak = (streak, initial = false) => {
+    streak.z = initial ? Math.random() : 0;
+    streak.side = Math.random() > 0.5 ? 1 : -1;
+    streak.offset = 0.22 + Math.random() * 0.78;
+    streak.lane = (Math.random() - 0.5) * 0.32;
+    streak.length = 46 + Math.random() * 132;
+    streak.width = 0.7 + Math.random() * 1.9;
+    streak.color = preset.colors[Math.floor(Math.random() * preset.colors.length)];
+    streak.alpha = 0.32 + Math.random() * 0.48;
+  };
+
+  const resize = () => {
+    const rect = hyperspeedCanvas.getBoundingClientRect();
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    width = Math.max(1, Math.round(rect.width));
+    height = Math.max(1, Math.round(rect.height));
+    hyperspeedCanvas.width = Math.round(width * dpr);
+    hyperspeedCanvas.height = Math.round(height * dpr);
+    context.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+
+  const drawPerspectiveGrid = (time) => {
+    const centerX = width * 0.53;
+    const horizonY = height * preset.horizon;
+    context.save();
+    context.globalAlpha = 0.24;
+    context.lineCap = "square";
+
+    [-1, -0.62, -0.28, 0.28, 0.62, 1].forEach((lane, index) => {
+      context.beginPath();
+      context.strokeStyle = index % 2 ? "#ffffff" : "#92ff00";
+      context.lineWidth = index % 2 ? 1 : 1.4;
+      context.moveTo(centerX + lane * width * preset.vanishingSpread, horizonY);
+      context.lineTo(centerX + lane * width * preset.roadSpread, height + 24);
+      context.stroke();
+    });
+
+    for (let i = 0; i < 9; i += 1) {
+      const phase = ((time * 0.00018 + i / 9) % 1) ** 1.85;
+      const y = horizonY + phase * height * 0.72;
+      const spread = preset.vanishingSpread + phase * (preset.roadSpread - preset.vanishingSpread);
+      context.globalAlpha = 0.08 + phase * 0.22;
+      context.strokeStyle = i % 2 ? "#ffffff" : "#92ff00";
+      context.lineWidth = 0.8 + phase * 2.6;
+      context.beginPath();
+      context.moveTo(centerX - spread * width, y);
+      context.lineTo(centerX + spread * width, y);
+      context.stroke();
+    }
+
+    context.restore();
+  };
+
+  const drawStreaks = (deltaTime) => {
+    const centerX = width * 0.53;
+    const horizonY = height * preset.horizon;
+
+    streaks.forEach((streak) => {
+      streak.z += deltaTime * preset.speed * (0.64 + streak.width * 0.18);
+      if (streak.z > 1) resetStreak(streak);
+
+      const depth = streak.z ** 2.05;
+      const spread = preset.vanishingSpread + depth * (preset.roadSpread - preset.vanishingSpread);
+      const y = horizonY + depth * height * 0.74;
+      const x = centerX + streak.side * spread * width * streak.offset + streak.lane * width * depth;
+      const length = streak.length * (0.18 + depth * 2.35);
+      const slope = streak.side * (20 + depth * 72);
+
+      context.save();
+      context.globalAlpha = Math.min(0.92, streak.alpha * (0.18 + depth * 1.2));
+      context.strokeStyle = streak.color;
+      context.lineWidth = streak.width + depth * 4.8;
+      context.lineCap = "square";
+      context.shadowBlur = 12 + depth * 28;
+      context.shadowColor = streak.color;
+      context.beginPath();
+      context.moveTo(x, y);
+      context.lineTo(x + streak.side * length, y - slope);
+      context.stroke();
+      context.restore();
+    });
+  };
+
+  const render = (time = 0) => {
+    if (!isVisible || document.hidden) {
+      animationFrame = null;
+      return;
+    }
+
+    const deltaTime = Math.min(time - lastTime || 16, 40);
+    lastTime = time;
+    context.clearRect(0, 0, width, height);
+    drawPerspectiveGrid(time);
+    drawStreaks(deltaTime);
+    animationFrame = window.requestAnimationFrame(render);
+  };
+
+  const start = () => {
+    if (animationFrame || document.hidden || !isVisible) return;
+    lastTime = performance.now();
+    animationFrame = window.requestAnimationFrame(render);
+  };
+
+  const stop = () => {
+    if (animationFrame) window.cancelAnimationFrame(animationFrame);
+    animationFrame = null;
+  };
+
+  resize();
+  for (let index = 0; index < preset.density; index += 1) {
+    const streak = {};
+    resetStreak(streak, true);
+    streaks.push(streak);
+  }
+
+  const resizeObserver = new ResizeObserver(() => {
+    resize();
+    start();
+  });
+  resizeObserver.observe(hyperspeedCanvas);
+
+  const visibilityObserver = new IntersectionObserver(
+    ([entry]) => {
+      isVisible = Boolean(entry?.isIntersecting);
+      if (isVisible) start();
+      else stop();
+    },
+    { threshold: 0.04 }
+  );
+  visibilityObserver.observe(hyperspeedCanvas.closest(".hero") || hyperspeedCanvas);
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stop();
+    else start();
+  });
+
+  start();
 };
 
 const syncHeaderOffset = () => {
@@ -174,6 +274,13 @@ const setPointer = (event) => {
 };
 
 const updateActiveNav = () => {
+  const firstSection = document.querySelector("main > section[id]");
+  const headerOffset = (header?.offsetHeight || 72) + 120;
+  if (firstSection && window.scrollY < firstSection.offsetTop - headerOffset) {
+    navLinks.forEach((link) => link.removeAttribute("aria-current"));
+    return;
+  }
+
   const current = [...document.querySelectorAll("section[id]")]
     .map((section) => ({
       id: section.id,
@@ -208,7 +315,11 @@ const updateScrollMotion = () => {
     });
   }
 
-  updateActiveNav();
+  const now = performance.now();
+  if (now - lastNavUpdate > 120) {
+    updateActiveNav();
+    lastNavUpdate = now;
+  }
   scrollTicking = false;
 };
 
@@ -240,7 +351,7 @@ const closeIsekaiOpening = () => {
   isekaiOpening.classList.remove("is-open");
   isekaiOpening.classList.add("is-complete");
   isekaiOpening.setAttribute("aria-hidden", "true");
-  scheduleInitialHashCorrection([0, 120, 360, 760, 1400, 2400, 3600]);
+  scheduleInitialHashCorrection([0, 160]);
   requestScrollUpdate();
 };
 
@@ -312,7 +423,7 @@ const runInitialHashCorrection = () => {
   requestScrollUpdate();
 };
 
-const scheduleInitialHashCorrection = (delays = [80, 220, 520, 900, 1400, 2200, 3400, 5000]) => {
+const scheduleInitialHashCorrection = (delays = [80, 260]) => {
   if (!window.location.hash || userScrollIntentDetected || initialHashCorrectionExpired) return;
 
   delays.forEach((delay) => {
@@ -323,7 +434,6 @@ const scheduleInitialHashCorrection = (delays = [80, 220, 520, 900, 1400, 2200, 
 
 const cancelInitialHashCorrection = () => {
   userScrollIntentDetected = true;
-  initialHashCorrectionActive = false;
   initialHashCorrectionExpired = true;
   initialHashTimers.forEach((timer) => window.clearTimeout(timer));
   initialHashTimers = [];
@@ -332,33 +442,13 @@ const cancelInitialHashCorrection = () => {
 const watchLayoutForHashCorrection = () => {
   if (!window.location.hash || userScrollIntentDetected || initialHashCorrectionExpired) return;
 
-  const pendingImages = [...document.images].filter((image) => !image.complete);
-  Promise.allSettled(
-    pendingImages.map(
-      (image) =>
-        new Promise((resolve) => {
-          image.addEventListener("load", resolve, { once: true });
-          image.addEventListener("error", resolve, { once: true });
-        })
-    )
-  ).then(() => scheduleInitialHashCorrection([0, 140, 420]));
-
   if (document.fonts?.ready) {
-    document.fonts.ready.then(() => scheduleInitialHashCorrection([0, 180, 520]));
-  }
-
-  if ("ResizeObserver" in window) {
-    const layoutObserver = new ResizeObserver(() => {
-      window.requestAnimationFrame(runInitialHashCorrection);
-    });
-    layoutObserver.observe(document.body);
-    window.setTimeout(() => layoutObserver.disconnect(), 6200);
+    document.fonts.ready.then(() => scheduleInitialHashCorrection([0, 180]));
   }
 
   window.setTimeout(() => {
-    initialHashCorrectionActive = false;
     initialHashCorrectionExpired = true;
-  }, 6400);
+  }, 1200);
 };
 
 const revealObserver = new IntersectionObserver(
@@ -373,6 +463,7 @@ const revealObserver = new IntersectionObserver(
 revealItems.forEach((item) => revealObserver.observe(item));
 
 syncHeaderOffset();
+initHyperspeed();
 renderIsekaiStage();
 
 const shouldShowIsekaiOpening = Boolean(isekaiOpening && !window.location.hash && getSessionFlag("cia0_isekai_seen") !== "true");
@@ -411,6 +502,50 @@ tiltCards.forEach((card) => {
     card.style.setProperty("--ry", "0deg");
   });
 });
+
+lanyardCards.forEach((card) => {
+  card.addEventListener("pointermove", (event) => {
+    if (reduceMotion.matches || event.pointerType === "touch") return;
+    const rect = card.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width - 0.5;
+    const y = (event.clientY - rect.top) / rect.height - 0.5;
+    card.classList.add("is-active");
+    card.style.setProperty("--lanyard-x", `${(y * -12).toFixed(2)}deg`);
+    card.style.setProperty("--lanyard-y", `${(x * 16).toFixed(2)}deg`);
+    card.style.setProperty("--lanyard-swing", `${(x * 7).toFixed(2)}deg`);
+  });
+
+  card.addEventListener("pointerleave", () => {
+    card.classList.remove("is-active");
+    card.style.setProperty("--lanyard-x", "0deg");
+    card.style.setProperty("--lanyard-y", "0deg");
+    card.style.setProperty("--lanyard-swing", "0deg");
+  });
+});
+
+const updateEvilEyes = (event) => {
+  if (!evilEyes.length || reduceMotion.matches || event.pointerType === "touch") return;
+
+  evilEyes.forEach((eye) => {
+    const rect = eye.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const x = clamp((event.clientX - centerX) / (rect.width / 2), -1, 1);
+    const y = clamp((event.clientY - centerY) / (rect.height / 2), -1, 1);
+
+    eye.style.setProperty("--eye-x", `${(x * 14).toFixed(2)}px`);
+    eye.style.setProperty("--eye-y", `${(y * 9).toFixed(2)}px`);
+    eye.style.setProperty("--eye-tilt", `${(x * 7).toFixed(2)}deg`);
+    eye.style.setProperty("--eye-glow-x", `${(50 + x * 12).toFixed(2)}%`);
+    eye.style.setProperty("--eye-glow-y", `${(48 + y * 8).toFixed(2)}%`);
+  });
+};
+
+if (evilEyes.length) {
+  window.addEventListener("pointermove", updateEvilEyes, { passive: true });
+}
 
 imageCards.forEach((card) => {
   let pulseTimer;
@@ -526,7 +661,7 @@ window.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && summonStage?.classList.contains("is-open")) closeSummon();
 });
 
-let videoAutoplayAttempted = false;
+let videoAutoplayTimer = null;
 
 const syncVideoButtons = () => {
   if (!featuredVideo) return;
@@ -537,25 +672,27 @@ const syncVideoButtons = () => {
   videoFrame?.classList.toggle("is-playing", isPlaying);
   videoFrame?.classList.toggle("is-paused", !isPlaying);
   videoFrame?.classList.toggle("has-video-error", hasError);
+};
 
-  if (videoToggle) videoToggle.textContent = featuredVideo.paused ? "Play" : "Pause";
-  if (videoMute) videoMute.textContent = featuredVideo.muted ? "Unmute" : "Mute";
-  if (videoStatus) {
-    if (hasError) {
-      videoStatus.textContent = "Reload video";
-    } else if (featuredVideo.paused) {
-      videoStatus.textContent = "Play reel";
-    } else {
-      videoStatus.textContent = "Playing";
-    }
-  }
+const prepareFeaturedVideo = () => {
+  if (!featuredVideo) return;
+  featuredVideo.defaultMuted = true;
+  featuredVideo.muted = true;
+  featuredVideo.loop = true;
+  featuredVideo.autoplay = true;
+  featuredVideo.playsInline = true;
+  featuredVideo.setAttribute("muted", "");
+  featuredVideo.setAttribute("autoplay", "");
+  featuredVideo.setAttribute("loop", "");
+  featuredVideo.setAttribute("playsinline", "");
+  featuredVideo.setAttribute("webkit-playsinline", "");
 };
 
 const playFeaturedVideo = async ({ forceMuted = false } = {}) => {
   if (!featuredVideo) return;
 
+  prepareFeaturedVideo();
   if (forceMuted) featuredVideo.muted = true;
-  featuredVideo.playsInline = true;
 
   if (featuredVideo.error || featuredVideo.networkState === HTMLMediaElement.NETWORK_EMPTY) {
     featuredVideo.load();
@@ -573,52 +710,48 @@ const playFeaturedVideo = async ({ forceMuted = false } = {}) => {
   syncVideoButtons();
 };
 
-const toggleFeaturedVideo = async () => {
+const attemptFeaturedAutoplay = (delay = 0) => {
   if (!featuredVideo) return;
-
-  if (featuredVideo.paused) {
-    await playFeaturedVideo();
-  } else {
-    featuredVideo.pause();
-    syncVideoButtons();
-  }
+  window.clearTimeout(videoAutoplayTimer);
+  prepareFeaturedVideo();
+  videoAutoplayTimer = window.setTimeout(() => {
+    if (document.hidden || document.visibilityState === "hidden") return;
+    playFeaturedVideo({ forceMuted: true });
+  }, delay);
 };
 
-const attemptFeaturedAutoplay = () => {
-  if (!featuredVideo || videoAutoplayAttempted) return;
-  videoAutoplayAttempted = true;
-  playFeaturedVideo({ forceMuted: true });
-};
-
-videoToggle?.addEventListener("click", toggleFeaturedVideo);
-
-videoHit?.addEventListener("click", (event) => {
-  event.stopPropagation();
-  toggleFeaturedVideo();
-});
-
-videoFrame?.addEventListener("click", toggleFeaturedVideo);
-
-videoMute?.addEventListener("click", () => {
-  if (!featuredVideo) return;
-  featuredVideo.muted = !featuredVideo.muted;
-  syncVideoButtons();
+videoFrame?.addEventListener("click", () => {
+  if (featuredVideo?.paused) playFeaturedVideo({ forceMuted: true });
 });
 
 featuredVideo?.addEventListener("play", syncVideoButtons);
 featuredVideo?.addEventListener("playing", syncVideoButtons);
-featuredVideo?.addEventListener("pause", syncVideoButtons);
-featuredVideo?.addEventListener("canplay", attemptFeaturedAutoplay);
-featuredVideo?.addEventListener("loadeddata", syncVideoButtons);
+featuredVideo?.addEventListener("pause", () => {
+  syncVideoButtons();
+  if (featuredVideo.autoplay && !featuredVideo.ended) attemptFeaturedAutoplay(320);
+});
+featuredVideo?.addEventListener("canplay", () => attemptFeaturedAutoplay(0));
+featuredVideo?.addEventListener("loadeddata", () => {
+  syncVideoButtons();
+  attemptFeaturedAutoplay(120);
+});
 featuredVideo?.addEventListener("volumechange", syncVideoButtons);
 featuredVideo?.addEventListener("error", syncVideoButtons);
 
 if (featuredVideo) {
-  window.addEventListener("load", () => window.setTimeout(attemptFeaturedAutoplay, 450), { once: true });
+  prepareFeaturedVideo();
+  const reelObserver = new IntersectionObserver(
+    (entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) attemptFeaturedAutoplay(120);
+    },
+    { threshold: 0.16 }
+  );
+  if (videoFrame) reelObserver.observe(videoFrame);
+
+  window.addEventListener("load", () => attemptFeaturedAutoplay(450), { once: true });
+  window.addEventListener("focus", () => attemptFeaturedAutoplay(80), { passive: true });
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden && featuredVideo.paused && featuredVideo.autoplay) {
-      playFeaturedVideo({ forceMuted: true });
-    }
+    if (!document.hidden && featuredVideo.paused && featuredVideo.autoplay) attemptFeaturedAutoplay(80);
   });
 }
 
@@ -640,11 +773,6 @@ scrollNext?.addEventListener("click", () => scrollToAdjacentSection(1));
 
 window.addEventListener("pointermove", setPointer, { passive: true });
 window.addEventListener("scroll", requestScrollUpdate, { passive: true });
-window.addEventListener("wheel", ensureWheelScroll, { passive: true });
-window.addEventListener("touchmove", ensureTouchScroll, { passive: true });
-window.addEventListener("touchend", () => {
-  lastTouchY = null;
-});
 const correctInitialHash = () => {
   scheduleInitialHashCorrection();
   watchLayoutForHashCorrection();
@@ -665,18 +793,16 @@ window.addEventListener(
   (event) => {
     if (["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "].includes(event.key)) {
       cancelInitialHashCorrection();
-      ensureKeyboardScroll(event);
     }
   }
 );
 
 const startInitialHashCorrection = () => {
   if (!window.location.hash || userScrollIntentDetected || initialHashCorrectionExpired) return;
-  initialHashCorrectionActive = true;
   correctInitialHash();
 };
 
-[0, 120, 420].forEach((delay) => window.setTimeout(startInitialHashCorrection, delay));
+[0, 180].forEach((delay) => window.setTimeout(startInitialHashCorrection, delay));
 
 if (document.readyState === "complete") {
   startInitialHashCorrection();

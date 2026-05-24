@@ -20,28 +20,10 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap"
       rel="stylesheet"
     >
-    <link rel="stylesheet" href="styles.css?v=pro27">
+    <link rel="stylesheet" href="styles.css?v=pro40">
   </head>
   <body>
     <div class="scroll-meter" aria-hidden="true"><span data-scroll-meter></span></div>
-
-    <div class="isekai-opening" data-isekai-opening data-step="0" aria-hidden="true">
-      <div class="isekai-panel" data-isekai-panel role="dialog" aria-label="Summon cia0_exe from isekai">
-        <div class="isekai-art" aria-hidden="true">
-          <img data-isekai-art src="assets/summon/comic-01.png" alt="">
-        </div>
-        <button class="isekai-hit" type="button" data-isekai-next aria-label="Next comic panel"></button>
-        <button class="isekai-skip" type="button" data-isekai-skip aria-label="Skip opening">X</button>
-        <div class="isekai-progress" aria-hidden="true" data-isekai-progress>
-          <span class="is-active"></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
-      </div>
-    </div>
 
     <header class="site-header" aria-label="Main navigation">
       <a class="brand" href="#top" aria-label="cia0_exe home">
@@ -49,8 +31,6 @@
         <span>cia0_exe</span>
       </a>
       <nav>
-        <a href="#showcase">Showcase</a>
-        <a href="#experience">Experience</a>
         <a href="#reel">Reel</a>
         <a href="#concept">Concept</a>
         <a href="#process">Process</a>
@@ -62,8 +42,9 @@
     <main id="top">
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-bg" aria-hidden="true">
-          <img src="assets/header.png" alt="">
+          <img src="assets/cia0-hyper-banner.png" alt="">
         </div>
+        <canvas class="hyperspeed-field" data-hyperspeed aria-hidden="true"></canvas>
         <div class="hero-inner">
           <div class="hero-copy reveal">
             <p class="eyebrow">AI Video Creator / Web3 Visual Operator</p>
@@ -72,14 +53,44 @@
               cia0_exe creates short-form AI video concepts with transformation energy, monster-battle framing, character-first visuals, and fast campaign packaging for Web3 communities.
             </p>
             <div class="hero-actions" aria-label="Primary actions">
-              <a class="button button-primary" href="#showcase">Explore Showcase</a>
-              <a class="button button-ghost" href="#reel">Watch Reel</a>
+              <a class="button button-primary" href="#reel">Watch Featured Reel</a>
               <a class="button button-ghost" href="https://x.com/cia0_exe" target="_blank" rel="noreferrer">Open X</a>
+              <a class="button button-ghost" href="#contact">Contact</a>
             </div>
           </div>
 
           <aside class="hero-panel reveal depth-card" aria-label="Profile summary" data-tilt-card data-scroll-depth>
-            <img class="panel-avatar" src="assets/finiish-pfp.png" alt="cia0_exe anime-style avatar with green and blue eyes.">
+            <figure class="lanyard-profile" data-lanyard-card aria-label="cia0_exe profile lanyard">
+              <div class="evil-eye-shell" data-evil-eye aria-hidden="true">
+                <div class="evil-eye-flame"></div>
+                <div class="evil-eye-core">
+                  <span class="evil-iris">
+                    <span class="evil-pupil"></span>
+                  </span>
+                </div>
+              </div>
+              <div class="lanyard-anchor" aria-hidden="true">
+                <span></span>
+              </div>
+              <svg class="lanyard-cord" viewBox="0 0 220 150" aria-hidden="true">
+                <path d="M82 2 C74 34 77 67 102 96 C111 107 116 124 110 148" />
+                <path d="M138 2 C147 34 143 67 118 96 C109 107 104 124 110 148" />
+              </svg>
+              <div class="lanyard-card-shell">
+                <div class="lanyard-clip" aria-hidden="true"></div>
+                <div class="lanyard-card">
+                  <div class="lanyard-card-top">
+                    <span>Creator Pass</span>
+                    <span>07</span>
+                  </div>
+                  <img class="lanyard-avatar" src="assets/finiish-pfp.png" alt="cia0_exe anime-style avatar with green and blue eyes.">
+                  <div class="lanyard-card-meta">
+                    <strong>cia0_exe</strong>
+                    <span>AI Video / Web3</span>
+                  </div>
+                </div>
+              </div>
+            </figure>
             <div>
               <p class="panel-label">cia0_exe</p>
             <h2>Seedance 2.0-ready visual direction with Web3 instincts.</h2>
@@ -102,207 +113,12 @@
         </div>
       </section>
 
-      <section class="section showcase-section" id="showcase" aria-labelledby="showcase-title">
-        <div class="section-head reveal">
-          <p class="eyebrow">Creator Showcase</p>
-          <h2 id="showcase-title">A curated portfolio system for AI video, character identity, and launch visuals.</h2>
-          <p>
-            Inspired by premium demo galleries and cinematic scroll experiences, this section reframes cia0_exe as a visual operator with clear proof, sharp packaging, and selectable work lanes.
-          </p>
-        </div>
-
-        <div class="showcase-filters reveal" aria-label="Creative lanes">
-          <span>AI Video</span>
-          <span>Character IP</span>
-          <span>Web3 Launch</span>
-          <span>Motion Direction</span>
-          <span>Visual Experience</span>
-        </div>
-
-        <div class="showcase-layout">
-          <article class="showcase-feature reveal depth-card" data-tilt-card data-scroll-depth>
-            <div class="showcase-media foil-card" data-showcase-media>
-              <img data-showcase-image src="assets/ai-video-still.png" alt="Cinematic AI video still selected as cia0_exe showcase feature.">
-              <div class="showcase-gridlines" aria-hidden="true"></div>
-            </div>
-            <div class="showcase-copy">
-              <p class="eyebrow" data-showcase-kicker>Signature Drop</p>
-              <h3 data-showcase-title>AI reel as the front-door proof.</h3>
-              <p data-showcase-description>
-                A compact campaign asset built around instant hook, strong character silhouette, fast movement, and X-ready visual energy.
-              </p>
-              <ul class="showcase-specs" data-showcase-specs>
-                <li>Seedance-style motion direction</li>
-                <li>Short-form trailer pacing</li>
-                <li>High-contrast Web3 packaging</li>
-              </ul>
-            </div>
-          </article>
-
-          <div class="showcase-index reveal" aria-label="Showcase selector">
-            <button
-              class="showcase-option is-active"
-              type="button"
-              data-showcase-option
-              data-showcase-image="assets/ai-video-still.png"
-              data-showcase-alt="Cinematic AI video still selected as cia0_exe showcase feature."
-              data-showcase-kicker="Signature Drop"
-              data-showcase-title="AI reel as the front-door proof."
-              data-showcase-description="A compact campaign asset built around instant hook, strong character silhouette, fast movement, and X-ready visual energy."
-              data-showcase-specs="Seedance-style motion direction|Short-form trailer pacing|High-contrast Web3 packaging"
-            >
-              <span>01</span>
-              <strong>Featured Reel</strong>
-              <em>AI video / campaign proof</em>
-            </button>
-            <button
-              class="showcase-option"
-              type="button"
-              data-showcase-option
-              data-showcase-image="assets/cia0-exe-aaa-concept-sheet.png"
-              data-showcase-alt="cia0_exe premium character board selected as showcase feature."
-              data-showcase-kicker="Character System"
-              data-showcase-title="A visual bible for cia0_exe identity."
-              data-showcase-description="The character board gives the profile a repeatable identity language: armor, lime-cyan energy, tactical silhouette, and creator-ready visual cues."
-              data-showcase-specs="Avatar recognition|Banner-ready composition|Reusable pose language"
-            >
-              <span>02</span>
-              <strong>Character Board</strong>
-              <em>Identity / visual system</em>
-            </button>
-            <button
-              class="showcase-option"
-              type="button"
-              data-showcase-option
-              data-showcase-image="assets/summon/comic-04.png"
-              data-showcase-alt="Isekai summon comic panel selected as cia0_exe showcase feature."
-              data-showcase-kicker="Opening Sequence"
-              data-showcase-title="A click-through summon intro with comic energy."
-              data-showcase-description="The website opens with sequential panels so visitors feel like they are unlocking the cia0_exe character world before entering the portfolio."
-              data-showcase-specs="Sequential storytelling|Click-to-advance panels|Character-first arrival"
-            >
-              <span>03</span>
-              <strong>Summon Intro</strong>
-              <em>Visual experience</em>
-            </button>
-            <button
-              class="showcase-option"
-              type="button"
-              data-showcase-option
-              data-showcase-image="assets/header.png"
-              data-showcase-alt="cia0_exe tactical profile banner selected as showcase feature."
-              data-showcase-kicker="Launch Kit"
-              data-showcase-title="A profile banner that sells the creator instantly."
-              data-showcase-description="Wide-format identity art turns the X profile into a campaign surface with stats, role framing, and a strong black-lime visual code."
-              data-showcase-specs="X profile framing|Campaign header format|Creator brand consistency"
-            >
-              <span>04</span>
-              <strong>Profile Banner</strong>
-              <em>Launch visual / Web3</em>
-            </button>
-          </div>
-        </div>
-
-        <div class="showcase-metrics reveal" aria-label="Portfolio highlights">
-          <div>
-            <span>Mode</span>
-            <strong>Curated Proof</strong>
-          </div>
-          <div>
-            <span>Style</span>
-            <strong>Cinematic Dark UI</strong>
-          </div>
-          <div>
-            <span>Output</span>
-            <strong>Video + Identity</strong>
-          </div>
-        </div>
-      </section>
-
-      <section class="section cinema-section" id="experience" aria-labelledby="experience-title">
-        <div class="section-head reveal">
-          <p class="eyebrow">Cinematic Experience</p>
-          <h2 id="experience-title">A scroll-driven proof path that feels like entering a creator demo.</h2>
-          <p>
-            The portfolio now moves like a curated launch page: every chapter changes the visual stage, making the identity, intro, reel, and banner feel connected as one premium creator system.
-          </p>
-        </div>
-
-        <div class="cinema-layout">
-          <div class="cinema-stage reveal">
-            <div class="cinema-screen foil-card depth-card" data-cinema-screen data-tilt-card data-scroll-depth>
-              <img data-cinema-image src="assets/summon/comic-02.png" alt="cia0_exe portal ignition visual.">
-              <div class="cinema-aura" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-              <div class="cinema-hud" aria-hidden="true">
-                <span data-cinema-code>Phase 01</span>
-                <strong data-cinema-name>Signal Lock</strong>
-              </div>
-            </div>
-          </div>
-
-          <div class="cinema-chapters">
-            <article
-              class="cinema-chapter reveal is-active"
-              data-cinema-step
-              data-cinema-image="assets/summon/comic-02.png"
-              data-cinema-alt="cia0_exe portal ignition visual."
-              data-cinema-code="Phase 01"
-              data-cinema-name="Signal Lock"
-            >
-              <span>01</span>
-              <h3>Summon the signal.</h3>
-              <p>The opening begins like a character arrival: dark space, lime energy, and a clear invitation to unlock the cia0_exe world.</p>
-            </article>
-            <article
-              class="cinema-chapter reveal"
-              data-cinema-step
-              data-cinema-image="assets/cia0-exe-aaa-concept-sheet.png"
-              data-cinema-alt="cia0_exe premium character direction board."
-              data-cinema-code="Phase 02"
-              data-cinema-name="Identity Sync"
-            >
-              <span>02</span>
-              <h3>Make the character memorable.</h3>
-              <p>The concept board turns the profile into a repeatable identity system: armor, aura, pose language, and campaign-ready composition.</p>
-            </article>
-            <article
-              class="cinema-chapter reveal"
-              data-cinema-step
-              data-cinema-image="assets/ai-video-still.png"
-              data-cinema-alt="cia0_exe cinematic AI video frame."
-              data-cinema-code="Phase 03"
-              data-cinema-name="Motion Proof"
-            >
-              <span>03</span>
-              <h3>Prove the work in motion.</h3>
-              <p>The reel becomes the centerpiece: fast hook, cinematic energy, and a format built for X viewers who decide in seconds.</p>
-            </article>
-            <article
-              class="cinema-chapter reveal"
-              data-cinema-step
-              data-cinema-image="assets/header.png"
-              data-cinema-alt="cia0_exe profile banner campaign visual."
-              data-cinema-code="Phase 04"
-              data-cinema-name="Launch Surface"
-            >
-              <span>04</span>
-              <h3>Package it for public attention.</h3>
-              <p>The banner, links, and contact flow turn the portfolio from a gallery into a ready-to-share creator landing system.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
       <section class="section reel-section" id="reel" aria-labelledby="reel-title">
         <div class="section-head reveal">
           <p class="eyebrow">Featured Reel</p>
           <h2 id="reel-title">AI video presented as the main proof of work.</h2>
           <p>
-            The reel is embedded directly in the portfolio with lightweight controls, so visitors can inspect the work without leaving the site.
+            The reel now plays as a clean autoplay showcase loop, keeping the focus on the work instead of visible controls.
           </p>
         </div>
 
@@ -317,19 +133,12 @@
                 playsinline
                 webkit-playsinline
                 preload="auto"
+                disablepictureinpicture
+                controlslist="nodownload noplaybackrate noremoteplayback"
                 aria-label="cia0_exe featured AI video reel"
               >
                 <source src="assets/cia0-feature-reel.mp4" type="video/mp4">
               </video>
-              <button class="video-hit" type="button" data-video-hit aria-label="Play or pause featured reel">
-                <span class="video-hit-icon" aria-hidden="true"></span>
-                <span data-video-status>Play reel</span>
-              </button>
-            </div>
-            <div class="video-actions" aria-label="Video controls">
-              <button class="video-action" type="button" data-video-toggle>Pause video</button>
-              <button class="video-action" type="button" data-video-mute>Unmute</button>
-              <a class="video-action" href="#process">Next panel</a>
             </div>
           </div>
 
@@ -352,7 +161,7 @@
         </div>
 
         <div class="motion-gallery reveal" aria-label="cia0_exe visual direction gallery">
-          <button class="image-card depth-card foil-card summon-trigger-card" type="button" data-tilt-card data-3d-image data-scroll-depth data-summon-trigger>
+          <button class="image-card depth-card foil-card" type="button" data-tilt-card data-3d-image data-scroll-depth>
             <img src="assets/ai-video-still.png" alt="Cinematic AI video still with dramatic action lighting.">
             <span>Summon Frame</span>
             <strong>Character aura reveal for cia0_exe.</strong>
@@ -363,7 +172,7 @@
             <strong>Recognizable face for creator branding.</strong>
           </button>
           <button class="image-card depth-card foil-card" type="button" data-tilt-card data-3d-image data-scroll-depth>
-            <img src="assets/header.png" alt="cia0_exe full banner with tactical anime character sheet.">
+            <img src="assets/cia0-hyper-banner.png" alt="cia0_exe green, white, and black tactical anime banner.">
             <span>Campaign Header</span>
             <strong>Wide-format profile art and launch banner.</strong>
           </button>
@@ -455,7 +264,7 @@
           </p>
         </div>
         <button class="identity-visual reveal depth-card foil-card" type="button" data-tilt-card data-3d-image data-scroll-depth>
-          <img class="identity-image" src="assets/header.png" alt="cia0_exe banner with character artwork and profile stats interface.">
+          <img class="identity-image" src="assets/cia0-hyper-banner.png" alt="cia0_exe green, white, and black tactical anime banner with character artwork.">
           <span>Profile Banner</span>
         </button>
       </section>
@@ -509,29 +318,11 @@
       </section>
     </main>
 
-    <div class="summon-stage" data-summon aria-hidden="true">
-      <button class="summon-backdrop" type="button" data-summon-close aria-label="Close cia0_exe aura"></button>
-      <div class="summon-card" role="dialog" aria-label="cia0_exe character aura">
-        <div class="summon-slash summon-slash-one" aria-hidden="true"></div>
-        <div class="summon-slash summon-slash-two" aria-hidden="true"></div>
-        <div class="summon-ring summon-ring-one" aria-hidden="true"></div>
-        <div class="summon-ring summon-ring-two" aria-hidden="true"></div>
-        <div class="summon-character">
-          <img src="assets/finiish-pfp.png" alt="cia0_exe character portrait with green and blue eyes.">
-        </div>
-        <div class="summon-caption">
-          <span>cia0_exe</span>
-          <strong>Oathbound AI Visual Operator</strong>
-        </div>
-        <button class="summon-close" type="button" data-summon-close aria-label="Close aura">Close</button>
-      </div>
-    </div>
-
     <div class="scroll-assist" aria-label="Section navigation">
       <button type="button" data-scroll-prev aria-label="Previous section">UP</button>
       <button type="button" data-scroll-next aria-label="Next section">DN</button>
     </div>
 
-    <script src="script.js?v=pro27"></script>
+    <script src="script.js?v=pro40"></script>
   </body>
 </html>
